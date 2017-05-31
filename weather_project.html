@@ -1,0 +1,161 @@
+<html>
+<head>
+<title>Fun Weather App</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script> 
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script>
+var temp = "you haven't gotten your weather condition yet";
+$(document).ready(function () {
+  $('#testButton').on('click', function() {
+    if ("geolocation" in navigator){
+      //$("#testing").text("gps works");
+      navigator.geolocation.getCurrentPosition(function(position) {
+        var ourLatitude = position.coords.latitude;
+        var ourLongitude = position.coords.longitude;
+        //$("#testing").text("your latitude is ", ourLatitude, " and your longitude is ", ourLongitude );
+        //$("#testing").text(ourLatitude);
+        //document.getElementById("testing").innerHTML = "cool our latitude is " + ourLatitude + " and our longitude is " + ourLongitude;
+        var beginningURL = "https://api.darksky.net/forecast/68e0311c2e1951df1116a5ff30a4af6f/"
+        var fullURL = beginningURL + ourLatitude + "," + ourLongitude;
+        //a sample darksky url is like https://api.darksky.net/forecast/68e0311c2e1951df1116a5ff30a4af6f/latitude,longitude
+        //document.getElementById("testing").innerHTML = "cool our full url is " +fullURL;
+
+        //now we actually need to get the data. We probably need JSONP to get the data due to design rules.
+
+        $.ajax({
+          url:fullURL,
+          dataType:"jsonp",
+          //we want ["currently"]["summary"] since it gives weather condition
+          success:function(json) { 
+            temp = json["currently"]["temperature"];
+
+            //document.getElementById("testing").innerHTML = "Currently, based on your geolocation, the weather condition is <strong>" + json["currently"]["summary"] + "</strong> , the chance of rain is <strong>" + 
+            //json["currently"]["precipProbability"]*100+"%</strong>, and the humidity percentage is <strong>"+json["currently"]["humidity"]*100+"%</strong>";
+
+            document.getElementById("testing").innerHTML = "Currently, based on your geolocation, the weather condition is <strong>" + json["currently"]["summary"] + "</strong>." + 
+            " Click below to get your temperature in Celsius, Fahrenheit, or both";
+
+            //$("#testing").text("your timezone is " + json["timezone"] + " and your weather condition is <strong>" + json["currently"]["summary"] + "</strong>");
+
+            //the only icons defined by darksky are clear-day, clear-night, rain, snow, sleet, wind, fog, cloudy, partly-cloudy-day, or partly-cloudy-night
+            //so if json["currently"]["icon"] are any of those, then create the appropiate animation
+            
+
+            //the following code for the weather animations is from a project called skycons which is in the public domain https://github.com/darkskyapp/skycons
+            //I used the weather animation code in a slightly modified way
+            //since I am using Forecast API, I can, for animations, use something like skycons.add("icon1", "rain"); or better yet  skycons.add("icon1",json["currently"]["icon"]);
+   
+            // by default, icons are black but you can color them
+            //var skycons = new Skycons({"color": "pink"});
+            var skycons = new Skycons();
+            // on Android, a nasty hack is needed: {"resizeClear": true}
+
+            // If you want to add more colors :
+            // var skycons = new Skycons({"monochrome": false});
+            // you can now customize the color of different parts
+            // main, moon, fog, fogbank, cloud, snow, leaf, rain, sun
+            // var skycons = new Skycons({
+            //  "monochrome": false,
+            //  "colors" : {
+            //    "cloud" : "#F00"
+            //  }
+            //  });
+
+            // you can add a canvas by it's ID
+            //skycons.add("icon1", Skycons.PARTLY_CLOUDY_DAY);
+            //skycons.add("icon1", "rain");
+    
+            // ...or by the canvas DOM element itself.
+            //skycons.add(document.getElementById("icon2"), Skycons.RAIN);
+
+            // if you're using the Forecast API, you can also supply
+            // strings: "partly-cloudy-day" or "rain".
+
+            //choose animation based on what json["currently"]["icon"] is
+            skycons.add("icon1",json["currently"]["icon"]);
+
+            // start animation!
+            skycons.play();
+
+            // you can also halt animation with skycons.pause()
+
+            // want to change the icon? no problem:
+            //skycons.set("icon1", Skycons.PARTLY_CLOUDY_NIGHT);
+
+            // want to remove one altogether? no problem:
+            //skycons.remove("icon2");
+        }});
+
+      }, function(err) {document.write(err.message); });
+    }
+      
+    else {
+      $("#testing").text("gps doesn't work");
+    }
+  });
+});
+</script>
+
+<script>
+//round temperature to the nearest tenths place
+function roundTemp(T) {
+  return Math.round((T*10))/10;
+}
+
+
+function convertFToC(T) {
+  return (T - 32) / 1.8;
+}
+
+//return temperature in Celsius and rounded too
+function returnTempC(F) {
+  document.getElementById("temperatureDisplay").innerHTML = "The temperature in Celsius is <strong>" + roundTemp(convertFToC(F)) +"C</strong>";
+}
+
+//return temperature in Fahrenheit and rounded too
+function returnTempF(F) {
+  document.getElementById("temperatureDisplay").innerHTML = "The temperature in Fahrenheit is <strong>" + roundTemp(F) + "F</strong>";
+}
+</script>
+
+
+<!--location where skycons.js will be executed from -->
+<script src="https://mandarinportal.com/javascript_projects/weather_project/skycons.js"> </script>
+
+</head>
+<br><br>
+<div class="container-fluid">
+  <div class="text-center">
+    <!--the following code for the figure and canvases is from a project called skycons which is in the public domain https://github.com/darkskyapp/skycons -->
+    <figure>
+      <canvas id="icon1" width="128" height="128"></canvas>
+      <canvas id="icon2" width="128" height="128"></canvas>
+    </figure>
+
+
+    <br><br>
+    <!--Fun Weather app -->
+    <div id ="testing"> </div>
+    <br><br>
+    <!--we only want class btn-block for mobile devices, not for desktops-->
+    <button type="button" class="btn btn-primary" id ="testButton">     Click here to get your weather info     </button>
+
+    <br><br><br>
+    <button type="button" class="btn btn-primary" id ="getCTemp" onClick="returnTempC(temp)"> Click here for your temperature in Celcius  </button>
+    <br><br><br>
+
+    <button type="button" class="btn btn-primary" id ="getFTemp" onClick="returnTempF(temp)">Click here for your temperature in Fahrenheit</button>
+
+    <br><br><br><br>
+
+    <!--This is where the temperature will go-->
+    <div id="temperatureDisplay"></div>
+
+    <br><br><br><br>
+  </div> <!--end of text-center div-->
+</div> <!--end of container-fluid div-->
+
+</html>
