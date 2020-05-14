@@ -1,0 +1,3 @@
+As of 14 May 2020:
+* fix the code so that it works with Firefox. This code works with Google Chrome, but I need to figure out why
+there are issues with Firefox.
